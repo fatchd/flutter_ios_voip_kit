@@ -42,7 +42,9 @@ class VoIPCenter: NSObject {
     var token: String? {
         if let didUpdateDeviceToken = UserDefaults.standard.data(forKey: didUpdateTokenKey) {
             let token = String(deviceToken: didUpdateDeviceToken)
+            #if DEBUG
             print("🎈 VoIP didUpdateDeviceToken: \(token)")
+            #endif
             return token
         }
 
@@ -51,7 +53,9 @@ class VoIPCenter: NSObject {
         }
 
         let token = String(deviceToken: cacheDeviceToken)
+        #if DEBUG
         print("🎈 VoIP cacheDeviceToken: \(token)")
+        #endif
         return token
     }
 
@@ -91,7 +95,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
     // MARK: - PKPushRegistryDelegate
 
     public func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
+        #if DEBUG
         print("🎈 VoIP didUpdate pushCredentials")
+        #endif
         UserDefaults.standard.set(pushCredentials.token, forKey: didUpdateTokenKey)
         
         self.eventSink?(["event": EventChannel.onDidUpdatePushToken.rawValue,
@@ -101,7 +107,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
     // NOTE: iOS10 support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
+        #if DEBUG
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
+        #endif
 
         _pushRegistry(parametersdidReceiveIncomingPushWith: payload, for: type, completion: {})
     }
@@ -109,7 +117,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
     // NOTE: iOS11 or more support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+        #if DEBUG
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
+        #endif
 
         _pushRegistry(parametersdidReceiveIncomingPushWith: payload, for: type, completion: completion)
     }
@@ -121,7 +131,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
                                         callerId: info?["incoming_caller_id"] as! String,
                                         callerName: callerName) { error in
             if let error = error {
+                #if DEBUG
                 print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
+                #endif
                 return
             }
             self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
@@ -138,7 +150,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
             let aps = json?["aps"] as? [String: Any]
             return aps?["alert"] as? [String: Any]
         } catch let error as NSError {
+            #if DEBUG
             print("❌ VoIP parsePayload: \(error.localizedDescription)")
+            #endif
             return nil
         }
     }
@@ -149,17 +163,23 @@ extension VoIPCenter: CXProviderDelegate {
     // MARK:  - CXProviderDelegate
 
     public func providerDidReset(_ provider: CXProvider) {
+        #if DEBUG
         print("🚫 VoIP providerDidReset")
+        #endif
     }
 
     public func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
+        #if DEBUG
         print("🤙 VoIP CXStartCallAction")
+        #endif
         self.callKitCenter.connectingOutgoingCall()
         action.fulfill()
     }
 
     public func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+        #if DEBUG
         print("✅ VoIP CXAnswerCallAction")
+        #endif
         self.callKitCenter.answerCallAction = action
         self.configureAudioSession()
         self.eventSink?(["event": EventChannel.onDidAcceptIncomingCall.rawValue,
@@ -168,7 +188,9 @@ extension VoIPCenter: CXProviderDelegate {
     }
 
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
+        #if DEBUG
         print("❎ VoIP CXEndCallAction")
+        #endif
         if (self.callKitCenter.isCalleeBeforeAcceptIncomingCall) {
             self.eventSink?(["event": EventChannel.onDidRejectIncomingCall.rawValue,
                              "uuid": self.callKitCenter.uuidString as Any,
@@ -180,12 +202,16 @@ extension VoIPCenter: CXProviderDelegate {
     }
     
     public func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
+        #if DEBUG
         print("🔈 VoIP didActivate audioSession")
+        #endif
         self.eventSink?(["event": EventChannel.onDidActivateAudioSession.rawValue])
     }
 
     public func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+        #if DEBUG
         print("🔇 VoIP didDeactivate audioSession")
+        #endif
         self.eventSink?(["event": EventChannel.onDidDeactivateAudioSession.rawValue])
     }
     
@@ -201,7 +227,9 @@ extension VoIPCenter: CXProviderDelegate {
             try sharedSession.setPreferredIOBufferDuration(ioBufferDuration)
             try sharedSession.setPreferredSampleRate(audioSampleRate)
         } catch {
+            #if DEBUG
             print("❌ VoIP Failed to configure `AVAudioSession`")
+            #endif
         }
     }
 }

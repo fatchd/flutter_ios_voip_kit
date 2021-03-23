@@ -84,7 +84,9 @@ public class SwiftFlutterIOSVoIPKitPlugin: NSObject {
                                             trigger: trigger)
         self.notificationCenter.add(request) { (error) in
             if let error = error {
+                #if DEBUG
                 print("❌ unansweredIncomingCall local notification error: \(error.localizedDescription)")
+                #endif
             }
         }
 
@@ -125,7 +127,9 @@ public class SwiftFlutterIOSVoIPKitPlugin: NSObject {
                                                    callerId: callerId,
                                                    callerName: callerName) { (error) in
             if let error = error {
+                #if DEBUG
                 print("❌ testIncomingCall error: \(error.localizedDescription)")
+                #endif
                 result(FlutterError(code: "testIncomingCall",
                                     message: error.localizedDescription,
                                     details: nil))

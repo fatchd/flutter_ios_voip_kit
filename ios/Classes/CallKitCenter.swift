@@ -66,7 +66,9 @@ class CallKitCenter: NSObject {
         let transaction = CXTransaction(action: startCallAction)
         self.controller.request(transaction) { error in
             if let error = error {
+                #if DEBUG
                 print("❌ CXStartCallAction error: \(error.localizedDescription)")
+                #endif
             }
         }
     }
@@ -113,7 +115,9 @@ class CallKitCenter: NSObject {
         let transaction = CXTransaction(action: endCallAction)
         self.controller.request(transaction) { error in
             if let error = error {
+                #if DEBUG
                 print("❌ CXEndCallAction error: \(error.localizedDescription)")
+                #endif
             }
         }
     }
