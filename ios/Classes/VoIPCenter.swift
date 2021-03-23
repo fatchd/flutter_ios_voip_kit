@@ -97,12 +97,24 @@ extension VoIPCenter: PKPushRegistryDelegate {
         self.eventSink?(["event": EventChannel.onDidUpdatePushToken.rawValue,
                          "token": pushCredentials.token.hexString])
     }
+    
+    // NOTE: iOS10 support
+
+    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
+        print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
+
+        _pushRegistry(parametersdidReceiveIncomingPushWith: payload, for: type, completion: {})
+    }
 
     // NOTE: iOS11 or more support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
 
+        _pushRegistry(parametersdidReceiveIncomingPushWith: payload, for: type, completion: completion)
+    }
+
+    func _pushRegistry(parametersdidReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         let info = self.parse(payload: payload)
         let callerName = info?["incoming_caller_name"] as! String
         self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
@@ -116,26 +128,6 @@ extension VoIPCenter: PKPushRegistryDelegate {
                              "payload": info as Any,
                              "incoming_caller_name": callerName])
             completion()
-        }
-    }
-
-    // NOTE: iOS10 support
-
-    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
-        print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
-
-        let info = self.parse(payload: payload)
-        let callerName = info?["incoming_caller_name"] as! String
-        self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
-                                        callerId: info?["incoming_caller_id"] as! String,
-                                        callerName: callerName) { error in
-            if let error = error {
-                print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
-                return
-            }
-            self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
-                             "payload": info as Any,
-                             "incoming_caller_name": callerName])
         }
     }
 
