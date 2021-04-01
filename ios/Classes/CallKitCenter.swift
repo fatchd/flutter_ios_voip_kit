@@ -13,9 +13,11 @@ class CallKitCenter: NSObject {
 
     private let controller = CXCallController()
     private let iconName: String
+    
     private let localizedName: String
     private let supportVideo: Bool
     private let skipRecallScreen: Bool
+    private var callingTimeout: Int = 30
     private var provider: CXProvider?
     private var uuid = UUID()
     private(set) var uuidString: String?
@@ -38,6 +40,7 @@ class CallKitCenter: NSObject {
             self.supportVideo = plist?["FIVKSupportVideo"] as? Bool ?? false
             self.skipRecallScreen = plist?["FIVKSkipRecallScreen"] as? Bool ?? false
             self.maximumCallGroups = plist?["FIVKMaximumCallGroups"] as? Int ?? 1
+            self.callingTimeout = plist?["FIVKCallingTimeout"] as? Int ?? 30
         } else {
             self.iconName = "AppIcon-VoIPKit"
             self.localizedName = "App Name"
@@ -108,6 +111,10 @@ class CallKitCenter: NSObject {
 
     func unansweredIncomingCall() {
         self.disconnected(reason: .unanswered)
+    }
+    
+    func terminatedIncomingCall() {
+        self.disconnected(reason: .remoteEnded)
     }
 
     func endCall() {

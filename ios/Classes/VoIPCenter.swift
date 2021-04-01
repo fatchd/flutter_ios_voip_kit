@@ -126,20 +126,30 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     func _pushRegistry(parametersdidReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         let info = self.parse(payload: payload)
+        let uuid = info?["uuid"] as! String
+        let callerId = info?["incoming_caller_id"] as! String
         let callerName = info?["incoming_caller_name"] as! String
-        self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
-                                        callerId: info?["incoming_caller_id"] as! String,
-                                        callerName: callerName) { error in
-            if let error = error {
-                #if DEBUG
-                print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
-                #endif
-                return
+        let callState = info?["incoming_call_state"] as! String
+
+        #if DEBUG
+        print("🎈 VoIP _pushRegistry callState: \(callState)")
+        #endif
+        
+        if (callState != "terminated") {
+            self.callKitCenter.incomingCall(uuidString: uuid, callerId: callerId, callerName: callerName) { error in
+                if let error = error {
+                    #if DEBUG
+                    print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
+                    #endif
+                    return
+                }
+                self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
+                                 "payload": info as Any,
+                                 "incoming_caller_name": callerName])
+                completion()
             }
-            self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
-                             "payload": info as Any,
-                             "incoming_caller_name": callerName])
-            completion()
+        } else if (callState == "terminated") {
+            self.callKitCenter.terminatedIncomingCall()
         }
     }
 
