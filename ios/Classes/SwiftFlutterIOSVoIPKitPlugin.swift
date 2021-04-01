@@ -73,23 +73,11 @@ public class SwiftFlutterIOSVoIPKitPlugin: NSObject {
             result(nil)
             return
         }
-
-        let content = UNMutableNotificationContent()
-        content.title = args["missedCallTitle"] as? String ?? "Missed Call"
-        content.body = args["missedCallBody"] as? String ?? "There was a call"
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2,
-                                                        repeats: false)
-        let request = UNNotificationRequest(identifier: "unansweredIncomingCall",
-                                            content: content,
-                                            trigger: trigger)
-        self.notificationCenter.add(request) { (error) in
-            if let error = error {
-                #if DEBUG
-                print("❌ unansweredIncomingCall local notification error: \(error.localizedDescription)")
-                #endif
-            }
-        }
-
+        
+        let title: String = args["missedCallTitle"] as? String ?? "Missed Call"
+        let body: String = args["missedCallBody"] as? String ?? "There was a call"
+        self.voIPCenter.showNotification(title: title, body: body)
+        
         result(nil)
     }
 

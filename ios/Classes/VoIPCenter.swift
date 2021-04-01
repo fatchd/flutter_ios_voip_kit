@@ -10,6 +10,7 @@ import Flutter
 import PushKit
 import CallKit
 import AVFoundation
+import UserNotifications
 
 extension String {
     internal init(deviceToken: Data) {
@@ -66,7 +67,8 @@ class VoIPCenter: NSObject {
     fileprivate var audioSessionMode: AVAudioSession.Mode
     fileprivate let ioBufferDuration: TimeInterval
     fileprivate let audioSampleRate: Double
-
+    private let notificationCenter = UNUserNotificationCenter.current()
+    
     init(eventChannel: FlutterEventChannel) {
         self.eventChannel = eventChannel
         self.pushRegistry = PKPushRegistry(queue: .main)
@@ -87,6 +89,32 @@ class VoIPCenter: NSObject {
         self.eventChannel.setStreamHandler(self)
         self.pushRegistry.delegate = self
         self.callKitCenter.setup(delegate: self)
+        self.notificationCenter.delegate = self
+    }
+    
+    public func showNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+        let request = UNNotificationRequest(identifier: "unansweredIncomingCall", content: content, trigger: trigger)
+        self.notificationCenter.add(request) { (error) in
+            if let error = error {
+                #if DEBUG
+                print("❌ unansweredIncomingCall local notification error: \(error.localizedDescription)")
+                #endif
+            }
+        }
+    }
+}
+
+extension VoIPCenter: UNUserNotificationCenterDelegate {
+
+    // MARK: - Local Notification
+
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // notify when foreground
+        completionHandler([.alert])
     }
 }
 
@@ -150,6 +178,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
             }
         } else if (callState == "terminated") {
             self.callKitCenter.terminatedIncomingCall()
+            showNotification(title: "Missed Call", body: "There was a call")
         }
     }
 
