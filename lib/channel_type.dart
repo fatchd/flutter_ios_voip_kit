@@ -4,7 +4,7 @@ enum ChannelType {
 }
 
 extension ChannelKeyTypeEx on ChannelType {
-  String get name {
+  String? get name {
     switch (this) {
       case ChannelType.method:
         return 'flutter_ios_voip_kit';

@@ -4,7 +4,7 @@ enum CallStateType {
 }
 
 extension CallStateTypeEx on CallStateType {
-  static CallStateType create(int value) {
+  static CallStateType? create(int value) {
     switch (value) {
       case 0:
         return CallStateType.idle;
@@ -15,7 +15,7 @@ extension CallStateTypeEx on CallStateType {
     }
   }
 
-  String get value {
+  String? get value {
     switch (this) {
       case CallStateType.idle:
         return 'idle';
