@@ -163,7 +163,16 @@ extension VoIPCenter: PKPushRegistryDelegate {
         print("🎈 VoIP _pushRegistry callState: \(callState)")
         #endif
         
-        if (callState != "terminated") {
+        if (callState == "terminated") {
+            self.callKitCenter.terminatedIncomingCall()
+            showNotification(title: "Missed Call", body: "There was a call")
+        } else if (callState == "hangup") {
+            self.callKitCenter.terminatedIncomingCall()
+            showNotification(title: "Missed Call", body: "Hangup by caller")
+        } else if (callState == "declined") {
+            self.callKitCenter.terminatedIncomingCall()
+            showNotification(title: "Declined Call", body: "Call declined")
+        } else {
             self.callKitCenter.incomingCall(uuidString: uuid, callerId: callerId, callerName: callerName) { error in
                 if let error = error {
                     #if DEBUG
@@ -176,10 +185,8 @@ extension VoIPCenter: PKPushRegistryDelegate {
                                  "incoming_caller_name": callerName])
                 completion()
             }
-        } else if (callState == "terminated") {
-            self.callKitCenter.terminatedIncomingCall()
-            showNotification(title: "Missed Call", body: "There was a call")
         }
+        
     }
 
     private func parse(payload: PKPushPayload) -> [String: Any]? {
